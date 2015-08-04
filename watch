@@ -75,14 +75,19 @@ function final_backup {
 function idle {
   echo "ready"
   while true; do
-    sleep 42 &
+    sleep 30m &
     wait $!
+    # restore every 30 mins - keep in sync with S3
+    restore
   done
 }
 
 restore
 
 trap final_backup SIGHUP SIGINT SIGTERM
-trap "backup; idle" USR1
+# signal USR1 means copy from container to s3
+trap "sleep 5; backup; idle" USR1
+# signal USR2 means copy from s3 to container
+trap "restore; idle" USR2
 
 idle
